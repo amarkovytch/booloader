@@ -38,7 +38,28 @@ init_everything_else:
     jmp real_start
 
 real_start:
-    mov si, message
+    ; Read our message from the 'disk'. It should be on the second sector (look at makefile)
+    ; http://www.ctyme.com/intr/rb-0607.htm
+    mov ah, 2
+    mov al, 1 ; we are reading one sector
+    mov ch, 0 ; Cylinder number
+    mov cl, 2 ; we are reading the second sector
+    mov dh, 0 ; head
+    ; the drive number in already set, it is the drive we booted from
+    mov bx, buffer
+    int 0x13
+    jc error
+
+    mov si, buffer
+    call print
+    jmp $ ; jump to itself, endless loop
+
+error:
+    mov si, error_msg
+    call print
+
+
+print:
 .loop:    ; . means that it is a sub label of the outer label
     lodsb
     cmp al, 0
@@ -46,7 +67,7 @@ real_start:
     call print_char
     jmp .loop
 .end:
-    jmp $ ; jump to itself, endless loop
+    ret
 
 ; the char to print should be in al
 print_char:
@@ -55,7 +76,6 @@ print_char:
     int 0x10
     ret
 
-message: db 'Hello World', 0
 
 ; Interrupt table
 ; Some interesting resourse to learn about exceptions : https://wiki.osdev.org/Exceptions
@@ -68,18 +88,22 @@ handle_zero:
     iret
 
 handle_one:
-    ; this basically prints 'A' on the screen
+    ; this basically prints 'V' on the screen
     mov ah, 0eh
     mov al, 'V'
     mov bx, 0x00
     int 0x10
     iret
 
+error_msg:
+    db 'Failed to load from disc', 0
 
 ; 510 - (current_address - starting_address_in_this_section)
 times 510 - ($ - $$) db 0
 
 ; magic expected by Bios
 dw 0xAA55
+; so the full size of our program is exactly 510 + 2 = 512 bytes (1 sector)
 
-# so the full size of our program is exactly 510 + 2 = 512 bytes (1 sector)
+; we will use this memory location in our program to load the data from disc
+buffer:
