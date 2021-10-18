@@ -3,9 +3,7 @@ Bootloader from Udemy:  "Developing a Multithreaded Kernel From Scratch!" course
 
 ## How to compile
 ```code
-nasm -f bin ./boot_protected_mode.asm -o ./boot.bin
-Or
-nasm -f bin ./boot_real_mode.asm -o ./boot.bin
+make all
 ```
 
 # How to run
@@ -22,3 +20,6 @@ Run gdb and then:
 target remote | qemu-system-x86_64 -hda ./boot.bin -S -gdb stdio
 ```
 This will stop before the first instruction (thanks to -S flag). You can now setup breakpoint to any address
+
+# Additional files
+Older version of the bootloader in 'real' mode can be found in 'old' folder
