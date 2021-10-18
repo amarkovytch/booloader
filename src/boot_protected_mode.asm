@@ -88,6 +88,13 @@ load32:
     mov ss, ax
     mov ebp, 0x02000000
     mov esp, ebp
+
+    ; enable A20
+    ; https://wiki.osdev.org/A20_Line
+    in al, 0x92
+    or al, 2
+    out 0x92, al
+
     jmp $
 
 ; 510 - (current_address - starting_address_in_this_section)
