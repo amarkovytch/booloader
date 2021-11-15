@@ -1,4 +1,3 @@
-
 ORG 0x7c00 ;This is where Bios loads our bootloader
 
 ; 16 bit arch
@@ -10,6 +9,7 @@ DATA_SEG equ gdt_data - gdt_start
 ; Look here for additiona info : https://wiki.osdev.org/FAT#BPB_.28BIOS_Parameter_Block.29
 ; If not placed, some bioses may refuse to boot up as they will be looking for there parameters
 ; The only stuff that we actually placed there is the : jmp short xxx ; nop. All the rest 33 bytes are 0.
+_start:
 _bios_parameter_block:
     jmp short init_cs
     nop
@@ -80,22 +80,77 @@ gdt_descriptior:
 
 [BITS 32]
 load32:
-    mov ax, DATA_SEG
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov ebp, 0x02000000
-    mov esp, ebp
+    mov eax, 1          ; starting sector
+    mov ecx, 100        ; total number of sectors to read
+    mov edi, 0x0100000  ; the address to load into
+    call ata_lba_read
+    ; now we can jump to code that is loaded to 0x0100000
+    jmp CODE_SEG:0x0100000
 
-    ; enable A20
-    ; https://wiki.osdev.org/A20_Line
-    in al, 0x92
-    or al, 2
-    out 0x92, al
+ata_lba_read:
+    ; https://wiki.osdev.org/ATA_PIO_Mode
+    mov ebx, eax    ; backup the starting sector
 
-    jmp $
+    ; Send the highest 8 bits of the lba to disc controller
+    shr eax, 24
+    or eax, 0xe0 ; select the master drive
+    mov dx, 0x1f6
+    out dx, al ; send the highest bits to disc controller address
+
+    ; Send the total sectors to read
+    mov eax, ecx
+    mov dx, 0x1f2
+    out dx, al
+
+    ; Send more bits of the lba
+    mov eax, ebx
+    mov dx, 0x1f3
+    out dx, al
+
+    ; Send more bits of the lba
+    mov dx, 0x1f4
+    mov eax, ebx
+    shr eax, 8
+    out dx, al
+
+    ; Send the last bits of the lba
+    mov dx, 0x1f5
+    mov eax, ebx
+    shr eax, 16
+    out dx, al
+
+    ; Send 'read sectors' (0x20) command
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+
+    ; Read all sectors into memory
+.next_sector:
+    push ecx
+
+    ; check if we need to read
+.try_again:
+    mov dx, 0x1f7
+    in al, dx
+    test al, 8
+    jz .try_again
+
+    ; Read 256 words at a time - 1 sector of 512 bytes
+    mov ecx, 256
+    mov dx, 0x1f0
+    ; insw - read word from i/o port specified in dx to ES:DI
+    ; rep prefix - repeat ecx times
+    rep insw
+    pop ecx
+    ; loop is exactly like dec ecx / jnz, except it doesn't set flags.
+    loop .next_sector
+
+    ; THE END
+    ret
+
+
+
+
 
 ; 510 - (current_address - starting_address_in_this_section)
 times 510 - ($ - $$) db 0
