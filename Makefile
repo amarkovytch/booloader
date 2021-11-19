@@ -24,6 +24,7 @@ FLAGS = -g -ffreestanding -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -f
 		-Wno-unused-parameter -Wno-cpp -Werror -Wall -O0
 
 all: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+	rm -rf $(BUILD_DIR)/os.bin
 	dd if=$(BUILD_DIR)/boot.bin >> $(BUILD_DIR)/os.bin
 	dd if=$(BUILD_DIR)/kernel.bin >> $(BUILD_DIR)/os.bin
 	dd if=/dev/zero bs=512 count=100 >> $(BUILD_DIR)/os.bin
