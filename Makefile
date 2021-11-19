@@ -1,5 +1,15 @@
-FILES = ./build/kernel.asm.o ./build/kernel.o
-INCLUDES = -I ./src
+CC = i686-elf-gcc
+LD = i686-elf-ld
+ASM = nasm
+
+OBJ_DIR = ./obj
+BUILD_DIR = ./bin
+SRC_DIR = ./src
+
+_OBJ = kernel.asm.o kernel.o utils.o
+OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
+
+INCLUDES = -I ./inc
 
 # ffreestanding - freestanding environment
 # fno-builtin - Don't recognize built-in functions that do not begin with__builtin_ as prefix
@@ -9,30 +19,29 @@ INCLUDES = -I ./src
 # finline-functions - consider all functions for inlining, even if they are not declared inline
 # Wno-unused-function - do not warn on presence of unused functions
 # Wno-cpp - suppress warning messages emitted by #warning directives
-FLAGS = -g -ffreestanding -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wno-cpp -Werror -Wall -O0 -Iinc
+FLAGS = -g -ffreestanding -fno-builtin -nostdlib -nostartfiles -nodefaultlibs -falign-jumps -falign-functions -falign-labels \
+        -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -Wno-unused-label \
+		-Wno-unused-parameter -Wno-cpp -Werror -Wall -O0
 
-all: ./bin/boot.bin ./bin/kernel.bin
-	rm -rf ./bin/os.bin
-	dd if=./bin/boot.bin >> ./bin/os.bin
-	dd if=./bin/kernel.bin >> ./bin/os.bin
-	dd if=/dev/zero bs=512 count=100 >> ./bin/os.bin
+all: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+	dd if=$(BUILD_DIR)/boot.bin >> $(BUILD_DIR)/os.bin
+	dd if=$(BUILD_DIR)/kernel.bin >> $(BUILD_DIR)/os.bin
+	dd if=/dev/zero bs=512 count=100 >> $(BUILD_DIR)/os.bin
 
-./bin/kernel.bin: $(FILES)
-	i686-elf-ld -g -relocatable $(FILES) -o ./build/kernelfull.o
-	i686-elf-gcc $(FLAGS) -T ./src/linker.ld -o ./bin/kernel.bin -ffreestanding -O0 -nostdlib ./build/kernelfull.o
+$(BUILD_DIR)/kernel.bin: $(OBJ)
+	$(LD) -g -relocatable $(OBJ) -o $(OBJ_DIR)/kernelfull.o
+	$(CC) $(FLAGS) -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel.bin -ffreestanding -O0 -nostdlib $(OBJ_DIR)/kernelfull.o
 
 
-./bin/boot.bin: ./src/boot/boot.asm
-	nasm -f bin ./src/boot/boot.asm -o ./bin/boot.bin
+$(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
+	$(ASM) -f bin $(SRC_DIR)/boot/boot.asm -o $(BUILD_DIR)/boot.bin
 
-./build/kernel.asm.o: ./src/kernel.asm
-	nasm -f elf -g  ./src/kernel.asm -o ./build/kernel.asm.o
+$(OBJ_DIR)/kernel.asm.o: $(SRC_DIR)/kernel.asm
+	$(ASM) -f elf -g   $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
 
-./build/kernel.o: ./src/kernel.c
-	i686-elf-gcc $(INCLUDES) $(FLAGS) -std=gnu99 -c ./src/kernel.c -o ./build/kernel.o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(INCLUDES) $(FLAGS) -std=gnu99 -c -o $@ $<
 
 clean:
-	rm ./bin/boot.bin
-	rm -rf ./bin/kernel.bin
-	rm -rf $(FILES)
-	rm -rf ./build/kernelfull.o
+	rm -rf $(OBJ_DIR)/*
+	rm -rf $(BUILD_DIR)/*
