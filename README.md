@@ -8,7 +8,7 @@ https://wiki.osdev.org/GCC_Cross-Compiler
 
 ## How to compile
 ```code
-make all
+make
 ```
 
 # How to run

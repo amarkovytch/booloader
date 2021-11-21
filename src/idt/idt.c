@@ -6,7 +6,7 @@
 static struct idt_desc interrupt_table[TOTAL_INTERRUPTS];
 static struct idtr_desc interrupt_table_descriptor;
 
-extern void idt_load(struct idtr_desc *ptr);
+extern void idt_load_asm(struct idtr_desc *ptr);
 
 void idt_zero() { print("Divide by zero error\n"); }
 
@@ -31,5 +31,5 @@ void interrupt_init()
 
     idt_set(0, idt_zero);
 
-    idt_load(&interrupt_table_descriptor);
+    idt_load_asm(&interrupt_table_descriptor);
 }
