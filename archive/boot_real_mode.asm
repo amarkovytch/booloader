@@ -28,6 +28,7 @@ init_everything_else:
 
     ; ss points to 0
     ; for each interrupt the table contains offset and segment
+    ; the interrupt table starts at address 0
     mov word[ss:0x00], handle_zero
     mov word[ss:0x02], 0x7c0
     mov word[ss:0x04], handle_one

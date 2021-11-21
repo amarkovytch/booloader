@@ -6,10 +6,10 @@ OBJ_DIR = ./obj
 BUILD_DIR = ./bin
 SRC_DIR = ./src
 
-_OBJ = kernel.asm.o kernel.o utils.o
+_OBJ = kernel.asm.o idt.asm.o kernel.o utils.o idt.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
-INCLUDES = -I ./inc
+INCLUDES = -I ./inc -I ./inc/idt
 
 # ffreestanding - freestanding environment
 # fno-builtin - Don't recognize built-in functions that do not begin with__builtin_ as prefix
@@ -40,7 +40,14 @@ $(BUILD_DIR)/boot.bin: $(SRC_DIR)/boot/boot.asm
 $(OBJ_DIR)/kernel.asm.o: $(SRC_DIR)/kernel.asm
 	$(ASM) -f elf -g   $(SRC_DIR)/kernel.asm -o $(OBJ_DIR)/kernel.asm.o
 
+
+$(OBJ_DIR)/idt.asm.o: $(SRC_DIR)/idt/idt.asm
+	$(ASM) -f elf -g   $(SRC_DIR)/idt/idt.asm -o $(OBJ_DIR)/idt.asm.o
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(INCLUDES) $(FLAGS) -std=gnu99 -c -o $@ $<
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/idt/%.c
 	$(CC) $(INCLUDES) $(FLAGS) -std=gnu99 -c -o $@ $<
 
 clean:
