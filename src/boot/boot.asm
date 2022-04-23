@@ -6,7 +6,7 @@ CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
 ; This is required to place the bootloader on a usb and boot from it.
-; Look here for additiona info : https://wiki.osdev.org/FAT#BPB_.28BIOS_Parameter_Block.29
+; Look here for additional info : https://wiki.osdev.org/FAT#BPB_.28BIOS_Parameter_Block.29
 ; If not placed, some bioses may refuse to boot up as they will be looking for there parameters
 ; The only stuff that we actually placed there is the : jmp short xxx ; nop. All the rest 33 bytes are 0.
 _start:

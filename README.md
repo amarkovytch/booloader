@@ -4,6 +4,9 @@ Bootloader from Udemys:  "Developing a Multithreaded Kernel From Scratch!" cours
 ## Prerequisites
 * Install cross platform gcc with no dependencies on native libraries, visit this page for more info:
 https://wiki.osdev.org/GCC_Cross-Compiler
+* sudo apt install nasm
+* sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+
 
 
 ## How to compile

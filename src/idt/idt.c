@@ -29,7 +29,7 @@ void interrupt_init()
     interrupt_table_descriptor.limit = sizeof(interrupt_table) - 1;
     interrupt_table_descriptor.base = (uint32_t)&interrupt_table;
 
-    idt_set(0, idt_zero);
+    idt_set(32, idt_zero);
 
     idt_load_asm(&interrupt_table_descriptor);
 }

@@ -1,5 +1,6 @@
 [BITS 32]
 global _start
+global test_interrupt
 extern kernel_main
 
 CODE_SEG equ 0x08
@@ -26,6 +27,9 @@ _start:
 
     call kernel_main
     jmp $
+
+test_interrupt:
+    int 32
 
 ; 510 - (current_address - starting_address_in_this_section)
 times 512 - ($ - $$) db 0
